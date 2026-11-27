@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ぼうけんのしょ 〜幹事ルーレット〜</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <!-- ヘッダーバー -->
+    <header class="rpg-window header-bar">
+      <div class="header-left">
+        <span class="badge-group" id="current-group-badge">デフォルト</span>
+        <h1 class="app-title">
+          「<span id="header-draw-title">幹事</span>」ルーレット
+        </h1>
+      </div>
+      <div class="header-controls">
+        <button type="button" id="btn-toggle-fast" class="rpg-btn rpg-btn-sm" title="演出スピード切替">
+          <span class="btn-icon">▶▶</span> <span id="label-fast-mode">通常</span>
+        </button>
+        <button type="button" id="btn-toggle-sound" class="rpg-btn rpg-btn-sm" title="サウンド切替">
+          <span class="btn-icon">♪</span> <span id="label-sound-mode">BGM+SE</span>
+        </button>
+        <button type="button" id="btn-open-party" class="rpg-btn rpg-btn-sm">
+          パーティへんせい (<span id="active-member-count">0</span>)
+        </button>
+        <button type="button" id="btn-open-settings" class="rpg-btn rpg-btn-sm">
+          せってい
+        </button>
+      </div>
+    </header>
+
+    <!-- メインステージエリア -->
+    <main class="main-stage-wrap">
+      <div id="stage-frame" class="rpg-window stage-frame">
+        <!-- 背景エフェクト・フラッシュ・暗転レイヤー -->
+        <div id="stage-bg" class="stage-bg theme-field"></div>
+        <div id="stage-flash" class="stage-flash"></div>
+        <div id="stage-blackout" class="stage-blackout"></div>
+        <div id="stage-confetti" class="stage-confetti"></div>
+
+        <!-- 上部ステータス表示（演出タイトルや進行インジケータ） -->
+        <div class="stage-hud">
+          <div id="stage-quest-label" class="quest-label">ぼうけんの じゅんびが できた！</div>
+          <div id="stage-scenario-tag" class="scenario-tag hidden"></div>
+        </div>
+
+        <!-- 中央ビジュアル領域 -->
+        <div id="stage-visual" class="stage-visual">
+          <!-- 待機画面 / 各シナリオの動的コンテンツがここに入る -->
+        </div>
+
+        <!-- カットインオーバーレイ -->
+        <div id="stage-cutin" class="stage-cutin hidden">
+          <div class="cutin-bar">
+            <span id="cutin-text">ちょっとまった！！</span>
+          </div>
+        </div>
+
+        <!-- 結果バナーオーバーレイ -->
+        <div id="stage-result" class="stage-result hidden">
+          <div class="result-card rpg-window">
+            <div id="result-sub" class="result-sub">今回の けっか</div>
+            <div id="result-name" class="result-name">ゆうしゃ</div>
+            <div id="result-caption" class="result-caption">に きまった！</div>
+            <div id="result-actions" class="result-actions">
+              <button type="button" id="btn-exclude-winner" class="rpg-btn rpg-btn-accent hidden">
+                この人を次回から除外する
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 下部メッセージウィンドウ -->
+        <div class="rpg-window message-box" id="message-box">
+          <div id="message-text" class="message-text"></div>
+          <span id="message-cursor" class="message-cursor hidden">▼</span>
+        </div>
+      </div>
+
+      <!-- アクションボタン領域 -->
+      <div class="action-bar">
+        <button type="button" id="btn-start-draw" class="rpg-btn rpg-btn-primary">
+          <span class="cursor-tri">▶</span> 「<span id="btn-draw-title">幹事</span>」を きめる
+        </button>
+        <button type="button" id="btn-skip-draw" class="rpg-btn rpg-btn-warn hidden">
+          ▶▶ 演出をスキップ
+        </button>
+      </div>
+      <div id="member-warning" class="member-warning hidden">
+        ※ 有効なメンバーがいません。「パーティへんせい」からメンバーを追加・ONにしてください。
+      </div>
+    </main>
+
+    <!-- パーティへんせいモーダル -->
+    <div id="modal-party" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-party-title">
+      <div class="rpg-window modal-panel modal-lg">
+        <div class="modal-header">
+          <h2 id="modal-party-title" class="modal-title">▶ パーティへんせい（メンバー管理）</h2>
+          <button type="button" class="rpg-btn rpg-btn-sm modal-close" data-close="modal-party">とじる</button>
+        </div>
+        <div class="modal-body">
+          <!-- グループ切替・作成 -->
+          <section class="panel-section">
+            <div class="section-label">グループ（ぼうけんのしょ）</div>
+            <div class="group-controls">
+              <select id="group-select" class="rpg-input"></select>
+              <button type="button" id="btn-group-new" class="rpg-btn rpg-btn-sm">しんき</button>
+              <button type="button" id="btn-group-rename" class="rpg-btn rpg-btn-sm">なまえ変更</button>
+              <button type="button" id="btn-group-delete" class="rpg-btn rpg-btn-sm rpg-btn-danger">さくじょ</button>
+            </div>
+          </section>
+
+          <!-- メンバー追加 -->
+          <section class="panel-section">
+            <div class="section-label">なかまを くわえる</div>
+            <div class="add-member-row">
+              <input type="text" id="input-member-name" class="rpg-input" placeholder="なまえを入力（Enterで追加）" maxlength="24">
+              <button type="button" id="btn-add-member" class="rpg-btn rpg-btn-accent">ついか</button>
+              <button type="button" id="btn-toggle-bulk" class="rpg-btn rpg-btn-sm">一括追加</button>
+            </div>
+            <div id="bulk-add-box" class="bulk-add-box hidden">
+              <textarea id="textarea-bulk-members" class="rpg-input rpg-textarea" rows="3" placeholder="改行またはカンマ区切りで複数人入力できます&#10;例：たなか, さとう, すずき"></textarea>
+              <div class="bulk-actions">
+                <button type="button" id="btn-exec-bulk" class="rpg-btn rpg-btn-sm rpg-btn-accent">まとめて追加</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 一括操作バー -->
+          <section class="panel-section">
+            <div class="list-toolbar">
+              <span class="section-label">メンバー一覧（<span id="party-summary">0/0人 参加</span>）</span>
+              <div class="toolbar-btns">
+                <button type="button" id="btn-enable-all" class="rpg-btn rpg-btn-xs">全員ON</button>
+                <button type="button" id="btn-disable-all" class="rpg-btn rpg-btn-xs">全員OFF</button>
+                <button type="button" id="btn-reset-weights" class="rpg-btn rpg-btn-xs">倍率リセット</button>
+              </div>
+            </div>
+            <div id="member-list" class="member-list"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- せっていモーダル -->
+    <div id="modal-settings" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+      <div class="rpg-window modal-panel">
+        <div class="modal-header">
+          <h2 id="modal-settings-title" class="modal-title">▶ さくせん（せってい）</h2>
+          <button type="button" class="rpg-btn rpg-btn-sm modal-close" data-close="modal-settings">とじる</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-item">
+            <label for="input-draw-title" class="section-label">お題（役割タイトル）</label>
+            <input type="text" id="input-draw-title" class="rpg-input" placeholder="例：幹事、発表者、買い出し" maxlength="20">
+            <div class="preset-chips">
+              <button type="button" class="rpg-btn rpg-btn-xs title-preset" data-title="幹事">幹事</button>
+              <button type="button" class="rpg-btn rpg-btn-xs title-preset" data-title="発表者">発表者</button>
+              <button type="button" class="rpg-btn rpg-btn-xs title-preset" data-title="買い出し">買い出し</button>
+              <button type="button" class="rpg-btn rpg-btn-xs title-preset" data-title="議事録">議事録</button>
+              <button type="button" class="rpg-btn rpg-btn-xs title-preset" data-title="おごり">おごり</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label for="select-scenario" class="section-label">演出シナリオ</label>
+            <select id="select-scenario" class="rpg-input">
+              <option value="random">おまかせ（全12種からランダム）</option>
+              <option value="treasure">1. 宝箱あけ（もちものがいっぱい・ひとくいばこ）</option>
+              <option value="boss">2. ボス戦（MPたりない・セーブわすれ）</option>
+              <option value="king">3. 王様のまえ（ひのきのぼう支給・ろうがん）</option>
+              <option value="metal">4. メタル系（1ダメージ・即にげだした）</option>
+              <option value="casino">5. カジノスロット（コイン不足・1コマずれ）</option>
+              <option value="dharma">6. ダーマの神殿（レベル不足・きょうは休み）</option>
+              <option value="spell">7. ふっかつのじゅもん（「ぬ」と「め」見間違い）</option>
+              <option value="race">8. スライムレース（突然あそびだす・ピオリム）</option>
+              <option value="sword">9. 伝説の剣（そうびできない・のろい）</option>
+              <option value="voyage">10. 旅と船（1歩でエンカウント・ちず逆さま）</option>
+              <option value="pot">11. 民家のツボ・タンスあさり（勝手に入って怒られる）</option>
+              <option value="yesno">12. はい／いいえ 無限ループ（断れない村長）</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <label for="range-safe-rate" class="section-label">
+              全員セーフ（ハズレ）発生率：<span id="label-safe-rate">10</span>%
+            </label>
+            <input type="range" id="range-safe-rate" class="rpg-range" min="0" max="40" step="5" value="10">
+            <p class="setting-hint">0%にすると毎回かならず誰か1人が選ばれます。</p>
+          </div>
+
+          <div class="setting-item">
+            <label class="section-label">サウンド設定</label>
+            <div class="radio-row">
+              <button type="button" class="rpg-btn rpg-btn-sm sound-opt" data-sound="all">BGM + SE</button>
+              <button type="button" class="rpg-btn rpg-btn-sm sound-opt" data-sound="se">SEのみ</button>
+              <button type="button" class="rpg-btn rpg-btn-sm sound-opt" data-sound="mute">ミュート</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label class="checkbox-row">
+              <input type="checkbox" id="chk-fast-mode">
+              <span>時短モード（演出を約2倍速で再生する）</span>
+            </label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="chk-reduced-effects">
+              <span>目に優しいモード（フラッシュ・画面揺れをOFFにする）</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
