@@ -38,15 +38,16 @@ export class StageController {
     this.messageTextEl = document.getElementById('message-text');
     this.messageCursorEl = document.getElementById('message-cursor');
 
-    this.fastMode = false;
+    this.speedMultiplier = 1;
     this.reducedEffects = false;
     this.aborted = false;
     this.pendingTimers = new Set();
     this.pendingRejects = new Set();
   }
 
-  setFastMode(enabled) {
-    this.fastMode = Boolean(enabled);
+  setSpeedMultiplier(val) {
+    const num = Number(val);
+    this.speedMultiplier = Number.isFinite(num) && num > 0 ? num : 1;
   }
 
   setReducedEffects(enabled) {
@@ -85,8 +86,7 @@ export class StageController {
   }
 
   scaleMs(ms) {
-    if (!this.fastMode) return ms;
-    return Math.max(40, Math.round(ms * 0.45));
+    return Math.max(20, Math.round(ms / this.speedMultiplier));
   }
 
   wait(ms) {
@@ -112,13 +112,13 @@ export class StageController {
     });
   }
 
-  async typeText(text, { speedMs = 34, pauseAfterMs = 650, sound = true } = {}) {
+  async typeText(text, { speedMs = 22, pauseAfterMs = 460, sound = true } = {}) {
     this.checkAborted();
     this.messageCursorEl.classList.add('hidden');
     this.messageTextEl.textContent = '';
 
     const chars = Array.from(text);
-    const stepMs = this.fastMode ? Math.max(10, Math.round(speedMs * 0.45)) : speedMs;
+    const stepMs = Math.max(8, Math.round(speedMs / this.speedMultiplier));
 
     for (let i = 0; i < chars.length; i++) {
       this.checkAborted();
@@ -221,7 +221,7 @@ export class StageController {
     this.cutinEl.classList.add('hidden');
   }
 
-  spawnConfetti(count = 40) {
+  spawnConfetti(count = 20) {
     const colors = ['#ffd93d', '#ff4757', '#2ed573', '#4deeea', '#c084fc', '#ffffff'];
     let html = '';
     for (let i = 0; i < count; i++) {
@@ -243,11 +243,7 @@ export class StageController {
     this.setQuestLabel(`お題：${drawTitle}（参加メンバー ${members.length}人）`);
 
     const pills = members
-      .map((m) => {
-        const w = Number(m.weight) || 1;
-        const wLabel = w !== 1 ? ` ×${w}` : '';
-        return `<span class="member-pill ${w !== 1 ? 'weighted' : ''}">${escapeHtml(m.name)}${wLabel}</span>`;
-      })
+      .map((m) => `<span class="member-pill">${escapeHtml(m.name)}</span>`)
       .join('');
 
     this.setVisualHtml(`
@@ -284,7 +280,7 @@ export class StageController {
       this.setTextInstant('しかし なにも おこらなかった！\n今回は ぜんいん セーフ。もういちど ためしてみよう。');
     } else {
       audio.playSe('fanfare');
-      this.spawnConfetti(32);
+      this.spawnConfetti(20);
       this.flash('gold');
       this.resultSubEl.textContent = `今回の「${drawTitle}」`;
       this.resultNameEl.textContent = winner.name;

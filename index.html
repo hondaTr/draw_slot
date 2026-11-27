@@ -171,19 +171,24 @@
           <div class="setting-item">
             <label for="select-scenario" class="section-label">演出シナリオ</label>
             <select id="select-scenario" class="rpg-input">
-              <option value="random">おまかせ（全12種からランダム）</option>
+              <option value="random">おまかせ（全17種からランダム）</option>
               <option value="treasure">1. 宝箱あけ（もちものがいっぱい・ひとくいばこ）</option>
-              <option value="boss">2. ボス戦（MPたりない・セーブわすれ）</option>
-              <option value="king">3. 王様のまえ（ひのきのぼう支給・ろうがん）</option>
-              <option value="metal">4. メタル系（1ダメージ・即にげだした）</option>
-              <option value="casino">5. カジノスロット（コイン不足・1コマずれ）</option>
-              <option value="dharma">6. ダーマの神殿（レベル不足・きょうは休み）</option>
+              <option value="boss">2. ボス戦（全滅からの復活逆転）</option>
+              <option value="king">3. 王様のまえ（名簿読み上げ・見間違い）</option>
+              <option value="metal">4. メタル系（1ダメージ・即逃走）</option>
+              <option value="casino">5. カジノスロット（リーチ・1コマずれ）</option>
+              <option value="dharma">6. ダーマの神殿（レベル不足・転職の儀）</option>
               <option value="spell">7. ふっかつのじゅもん（「ぬ」と「め」見間違い）</option>
-              <option value="race">8. スライムレース（突然あそびだす・ピオリム）</option>
-              <option value="sword">9. 伝説の剣（そうびできない・のろい）</option>
-              <option value="voyage">10. 旅と船（1歩でエンカウント・ちず逆さま）</option>
-              <option value="pot">11. 民家のツボ・タンスあさり（勝手に入って怒られる）</option>
-              <option value="yesno">12. はい／いいえ 無限ループ（断れない村長）</option>
+              <option value="race">8. スライムレース（ようすをみている・大逆転）</option>
+              <option value="sword">9. 伝説の剣（そうびできない・のろい解呪）</option>
+              <option value="voyage">10. 旅と船（クラーケン・ちず逆さま）</option>
+              <option value="pot">11. 民家のツボ・タンス（探索あるある）</option>
+              <option value="yesno">12. はい／いいえループ（断れない村長）</option>
+              <option value="ring">13. 指輪の選択（夜の屋敷・決意の一歩）</option>
+              <option value="phoenix">14. 不死鳥の祭壇（6つのオーブ・飛翔）</option>
+              <option value="slash">15. 居合の一閃（静寂からの二の太刀）</option>
+              <option value="dungeon">16. ダンジョン探検（迷宮探索・隠し通路）</option>
+              <option value="arena">17. モンスター闘技場（勝ち抜き決勝・逆転の一撃）</option>
             </select>
           </div>
 
@@ -205,10 +210,16 @@
           </div>
 
           <div class="setting-item">
-            <label class="checkbox-row">
-              <input type="checkbox" id="chk-fast-mode">
-              <span>時短モード（演出を約2倍速で再生する）</span>
-            </label>
+            <label class="section-label">演出スピード</label>
+            <div class="radio-row">
+              <button type="button" class="rpg-btn rpg-btn-sm speed-opt" data-speed="0.5">0.5x (じっくり)</button>
+              <button type="button" class="rpg-btn rpg-btn-sm speed-opt" data-speed="0.8">0.8x (やや遅め)</button>
+              <button type="button" class="rpg-btn rpg-btn-sm speed-opt" data-speed="1">1x (通常)</button>
+              <button type="button" class="rpg-btn rpg-btn-sm speed-opt" data-speed="2">2x (時短)</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
             <label class="checkbox-row">
               <input type="checkbox" id="chk-reduced-effects">
               <span>目に優しいモード（フラッシュ・画面揺れをOFFにする）</span>

@@ -35,41 +35,39 @@ export async function runSpellScenario(ctx) {
   const prefix = ['ゆ', 'う', 'し', 'ゃ', 'の', 'め', 'も', 'だ'];
   const shown = [];
 
-  stage.setVisualHtml(renderSpellScene({ chars: ['？'], statusBadge: '手書きメモを 見ながら 入力中…' }));
-  await stage.typeText(`ノートの すみに かいた「ふっかつの じゅもん」で\n今回の「${drawTitle}」を よびだそう！`, { pauseAfterMs: 550 });
+  stage.setVisualHtml(renderSpellScene({ chars: ['？'], statusBadge: 'メモを 見ながら 入力中…' }));
+  await stage.typeText(`手書きメモの「ふっかつの じゅもん」で\n今回の「${drawTitle}」を よびだそう！`, { pauseAfterMs: 450 });
 
-  // プレミア：1発で通った！（珍しい）
   if (route === 'premier') {
-    const winChars = Array.from(`もょもと・${winner.name}`).slice(0, 12);
+    const winChars = Array.from(`ひかり・${winner.name}`).slice(0, 12);
     for (const ch of winChars) {
       stage.checkAborted();
       shown.push(ch);
       audio.playSe('cursor');
       stage.setVisualHtml(renderSpellScene({
         chars: shown,
-        statusBadge: 'めずらしく 1発で 入力できた！',
+        statusBadge: '1発で 入力できた！',
         aura: 'aura-gold',
         highlightAll: true,
       }));
-      await stage.wait(95);
+      await stage.wait(75);
     }
     audio.playSe('confirm');
     stage.flash('gold');
-    await stage.typeText(`すごい！ 長い じゅもんが 1回も まちがえずに 通った！\n「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`長い じゅもんが 1回で みごと 通った！\n「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     stage.checkAborted();
     shown.push(i < prefix.length ? prefix[i] : randomKana());
     audio.playSe('cursor');
-    stage.setVisualHtml(renderSpellScene({ chars: shown, statusBadge: 'ぽちぽち 入力中…', aura: 'aura-red' }));
-    await stage.wait(125);
+    stage.setVisualHtml(renderSpellScene({ chars: shown, statusBadge: 'じゅもんを 入力中…', aura: 'aura-red' }));
+    await stage.wait(95);
   }
 
-  // セーフ：おきのどくですが ぼうけんのしょは…
   if (isSafe) {
-    await stage.typeText('最後の 1文字を いれた！', { pauseAfterMs: 600 });
+    await stage.typeText('最後の 1文字を いれた！', { pauseAfterMs: 450 });
     audio.playSe('wipeout');
     stage.setVisualHtml(renderSpellScene({
       chars: ['お', 'き', 'の', 'ど', 'く', 'で', 'す', 'が'],
@@ -77,11 +75,10 @@ export async function runSpellScenario(ctx) {
       aura: 'aura-red',
       errorMode: true,
     }));
-    await stage.typeText('おきのどくですが ぼうけんのしょは きえてしまいました…！\n（デロデロデロデロ…） 今回は ぜんいん セーフ！', { pauseAfterMs: 900 });
+    await stage.typeText('おきのどくですが ぼうけんのしょは きえてしまいました…！\n今回は ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：「ぬ」と「め」、「わ」と「れ」の手書きメモ見間違い！
   if (route === 'reverse') {
     const fakeChars = [...shown.slice(0, 5), ...Array.from(decoy.name).slice(0, 4)];
     stage.setVisualHtml(renderSpellScene({
@@ -89,7 +86,7 @@ export async function runSpellScenario(ctx) {
       statusBadge: `メモによると「${decoy.name}」？`,
       aura: 'aura-gold',
     }));
-    await stage.typeText(`「${decoy.name}」の じゅもんを ぜんぶ いれた……！`, { pauseAfterMs: 700 });
+    await stage.typeText(`「${decoy.name}」の じゅもんを いれた……！`, { pauseAfterMs: 520 });
 
     audio.playSe('miss');
     stage.shake('light');
@@ -99,9 +96,9 @@ export async function runSpellScenario(ctx) {
       aura: 'aura-red',
       errorMode: true,
     }));
-    await stage.typeText('「じゅもんが ちがいます」！！\n……あ！ 手書きメモの「ぬ」と「め」を みまちがえていた！', { pauseAfterMs: 750 });
+    await stage.typeText('「じゅもんが ちがいます」！！\n手書きメモの「ぬ」と「め」を みまちがえていた！', { pauseAfterMs: 550 });
 
-    await stage.showCutin('「め」を「ぬ」に うちなおした！', 950);
+    await stage.showCutin('「め」を「ぬ」に うちなおした！', 800);
     audio.playSe('upgrade');
     stage.flash('gold');
     const trueChars = [...shown.slice(0, 4), ...Array.from(winner.name).slice(0, 6)];
@@ -111,11 +108,10 @@ export async function runSpellScenario(ctx) {
       aura: 'aura-gold',
       highlightAll: true,
     }));
-    await stage.typeText(`うちなおしたら やっと 通じた！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`うちなおしたら 通じた！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常
   audio.playSe('confirm');
   stage.flash('gold');
   const okChars = [...shown.slice(0, 4), ...Array.from(winner.name).slice(0, 6)];
@@ -125,5 +121,5 @@ export async function runSpellScenario(ctx) {
     aura: 'aura-gold',
     highlightAll: true,
   }));
-  await stage.typeText(`じゅもんが みごと 通じた！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 800 });
+  await stage.typeText(`じゅもんが みごと 通じた！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 600 });
 }

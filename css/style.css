@@ -263,8 +263,20 @@ button, input, select, textarea {
 
 .stage-bg.theme-church {
   background:
-    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.24), transparent 60%),
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.2), transparent 60%),
     linear-gradient(180deg, #18233c 0%, #223557 65%, #101726 100%);
+}
+
+.stage-bg.theme-night {
+  background:
+    radial-gradient(circle at 50% 25%, rgba(103, 198, 216, 0.14), transparent 60%),
+    linear-gradient(180deg, #090d1c 0%, #111830 68%, #090c17 100%);
+}
+
+.stage-bg.theme-arena {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(234, 185, 73, 0.16), transparent 62%),
+    linear-gradient(180deg, #1b120c 0%, #2a1c12 65%, #120c08 100%);
 }
 
 /* フラッシュ・暗転（目に優しいソフト表現） */
@@ -590,82 +602,241 @@ button, input, select, textarea {
   animation: pulseWin 0.6s ease infinite alternate;
 }
 
-/* カジノスロット */
-.casino-machine {
+/* カジノスロット（実回転ドラム筐体） */
+.casino-cabinet {
+  width: min(680px, 98%);
+  background: linear-gradient(180deg, #271333 0%, #160a1f 100%);
+  border: 3px solid var(--accent-gold);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: inset 0 0 0 2px #090611, 0 8px 22px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 10px;
-  width: min(700px, 96%);
+}
+
+.casino-marquee {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #0d0716;
+  border: 2px solid rgba(234, 185, 73, 0.55);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.casino-lamps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.casino-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3b2a4a;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.casino-dot.on {
+  background: var(--accent-gold);
+  box-shadow: 0 0 8px rgba(234, 185, 73, 0.75);
+}
+
+.casino-dot.reach-on {
+  background: var(--accent-red);
+  box-shadow: 0 0 8px rgba(223, 100, 112, 0.8);
+}
+
+.casino-coins {
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  letter-spacing: 0.08em;
+}
+
+.casino-window-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.casino-arrow {
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+  user-select: none;
+  flex-shrink: 0;
 }
 
 .casino-reels {
+  position: relative;
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  width: 100%;
-  background: #14081a;
-  border: 3px solid var(--accent-gold);
-  padding: 12px;
+  gap: 8px;
+  background: #080510;
+  border: 2px solid #8a6d29;
+  padding: 6px;
   border-radius: 6px;
-  box-shadow: 0 0 22px rgba(255, 217, 61, 0.25);
 }
 
-.reel-col {
-  background: #070912;
-  border: 2px solid #6b7280;
+.casino-payline {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 42px;
+  transform: translateY(-50%);
+  border-top: 2px solid rgba(234, 185, 73, 0.55);
+  border-bottom: 2px solid rgba(234, 185, 73, 0.55);
+  background: rgba(234, 185, 73, 0.06);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.reel-viewport {
+  position: relative;
+  height: 126px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #060812 0%, #131b33 50%, #060812 100%);
+  border: 2px solid #475569;
   border-radius: 4px;
-  height: 112px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.reel-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 8, 18, 0.72) 0%, transparent 28%, transparent 72%, rgba(6, 8, 18, 0.72) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.reel-viewport.locked {
+  border-color: var(--accent-gold);
+  box-shadow: inset 0 0 10px rgba(234, 185, 73, 0.28);
+}
+
+.reel-strip {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  will-change: transform;
+}
+
+.reel-strip.is-spinning {
+  animation: reelScroll 0.42s linear infinite;
+}
+
+.reel-item {
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
-  padding: 6px 4px;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
+  font-size: 0.94rem;
+  color: var(--text-main);
   overflow: hidden;
 }
 
-.reel-col.locked {
-  border-color: var(--accent-gold);
-  box-shadow: inset 0 0 14px rgba(255, 217, 61, 0.3);
+.reel-item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
-.reel-col.spinning .reel-cell-main {
-  animation: reelBlur 0.14s linear infinite;
-}
-
-.reel-cell-sub {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  opacity: 0.65;
-  max-width: 100%;
+.reel-item-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.reel-cell-main {
-  font-size: 1.12rem;
-  color: var(--accent-gold);
-  font-weight: bold;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 4px 6px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.2);
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-  width: 100%;
-  text-align: center;
+.casino-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.casino-stops {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 18px;
+}
+
+.casino-stop-btn {
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid #94a3b8;
+  background: linear-gradient(180deg, #991b1b 0%, #5c1010 100%);
+  color: #e8eef7;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.casino-stop-btn.pressed {
+  transform: translateY(2px);
+  background: #1e293b;
+  border-color: #475569;
+  color: #64748b;
+}
+
+.casino-lever {
+  width: 18px;
+  height: 44px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.casino-lever-rod {
+  width: 4px;
+  height: 30px;
+  background: #94a3b8;
+  border-radius: 2px;
+  transition: transform 0.25s ease;
+  transform-origin: bottom center;
+}
+
+.casino-lever-ball {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  border: 2px solid #e8eef7;
+  transition: transform 0.25s ease;
+}
+
+.casino-lever.pulled .casino-lever-ball {
+  transform: translateY(18px);
+}
+
+.casino-lever.pulled .casino-lever-rod {
+  transform: scaleY(0.45);
 }
 
 .casino-lamp {
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   color: var(--accent-cyan);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .casino-lamp.reach {
-  color: var(--accent-red);
+  color: var(--accent-gold);
   animation: blinkCursor 1s ease-in-out infinite;
 }
 
@@ -1017,39 +1188,97 @@ button, input, select, textarea {
   accent-color: var(--accent-gold);
 }
 
-/* 新演出用スタイル：スライム大レース & ふっかつのじゅもん */
+/* スライム大レース（全員出走・臨場感強化） */
+.race-header {
+  width: min(680px, 98%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--accent-gold);
+}
+
 .race-track {
-  width: min(680px, 96%);
+  width: min(680px, 98%);
+  max-height: 235px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: rgba(12, 18, 36, 0.9);
-  border: 2px solid rgba(212, 220, 235, 0.45);
+  gap: 6px;
+  background: linear-gradient(180deg, #102418 0%, #0d1c14 100%);
+  border: 2px solid rgba(212, 220, 235, 0.5);
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .race-lane {
   position: relative;
   display: flex;
   align-items: center;
+  gap: 6px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(255, 255, 255, 0.12) 49.5%, rgba(255, 255, 255, 0.12) 50.5%, transparent 50.5%),
+    rgba(255, 255, 255, 0.04);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.14);
   border-radius: 4px;
-  padding: 0 8px;
+  padding: 0 14px 0 6px;
   overflow: hidden;
-  border-right: 4px dashed var(--accent-gold);
+}
+
+.race-lane::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: repeating-linear-gradient(
+    180deg,
+    #e8eef7 0px,
+    #e8eef7 4px,
+    #0f1526 4px,
+    #0f1526 8px
+  );
+  opacity: 0.85;
+}
+
+.race-track.is-compact .race-lane {
+  height: 29px;
+}
+
+.race-track.is-dense .race-lane {
+  height: 24px;
+}
+
+.race-rank {
+  position: relative;
+  z-index: 2;
+  min-width: 24px;
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--text-dim);
+  background: rgba(11, 14, 23, 0.85);
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+.race-rank.top1 {
+  color: var(--accent-gold);
+  border: 1px solid rgba(234, 185, 73, 0.6);
 }
 
 .race-lane-name {
   position: relative;
   z-index: 2;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-main);
-  background: rgba(11, 14, 23, 0.75);
+  background: rgba(11, 14, 23, 0.78);
   padding: 1px 6px;
   border-radius: 3px;
-  max-width: 110px;
+  max-width: 105px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1057,14 +1286,110 @@ button, input, select, textarea {
 
 .race-runner {
   position: absolute;
-  top: 2px;
-  transition: left 0.28s ease-out;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: left 0.24s linear;
   display: inline-flex;
   align-items: center;
+  z-index: 1;
+}
+
+.race-runner.is-boosting::before {
+  content: '＝';
+  color: var(--accent-cyan);
+  font-size: 0.78rem;
+  margin-right: -2px;
 }
 
 .race-runner.sleeping {
   opacity: 0.6;
+}
+
+/* モンスター闘技場 */
+.arena-roster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  max-width: min(680px, 96%);
+}
+
+.arena-badge {
+  font-size: 0.76rem;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid rgba(212, 220, 235, 0.35);
+  background: rgba(15, 21, 38, 0.85);
+}
+
+.arena-badge.fighting {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.arena-badge.eliminated {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.arena-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: min(620px, 96%);
+  padding: 10px 14px;
+  background: rgba(18, 12, 8, 0.85);
+  border: 2px solid rgba(234, 185, 73, 0.55);
+  border-radius: 8px;
+}
+
+.arena-fighter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.arena-fighter-name {
+  font-size: 0.92rem;
+  color: var(--text-main);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arena-hp-bar {
+  width: 100%;
+  height: 9px;
+  background: #231414;
+  border: 1px solid #d4dceb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.arena-hp-fill {
+  height: 100%;
+  background: var(--accent-green);
+  transition: width 0.3s ease;
+}
+
+.arena-hp-fill.is-low {
+  background: var(--accent-red);
+}
+
+.arena-hp-num {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+.arena-vs {
+  font-size: 1.2rem;
+  color: var(--accent-gold);
+  flex-shrink: 0;
 }
 
 .spell-grid {
@@ -1131,39 +1456,338 @@ button, input, select, textarea {
   background: rgba(234, 185, 73, 0.12);
 }
 
+/* 指輪の選択（DQ5モチーフ） */
+.ring-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: min(680px, 96%);
+}
+
+.ring-person {
+  min-width: 112px;
+  max-width: 150px;
+  padding: 8px 12px;
+  background: rgba(15, 21, 38, 0.9);
+  border: 2px solid rgba(212, 220, 235, 0.35);
+  border-radius: 5px;
+  text-align: center;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+}
+
+.ring-person.focused {
+  border-color: var(--accent-gold);
+  background: rgba(234, 185, 73, 0.16);
+  color: var(--accent-gold);
+  transform: translateY(-4px);
+}
+
+/* 不死鳥の祭壇（6つのオーブ） */
+.orb-altar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orb-gem {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 220, 235, 0.4);
+  background: rgba(15, 21, 38, 0.8);
+  opacity: 0.35;
+  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.orb-gem.lit {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.orb-blue.lit { background: #60a5fa; box-shadow: 0 0 10px rgba(96, 165, 250, 0.6); }
+.orb-red.lit { background: #df6470; box-shadow: 0 0 10px rgba(223, 100, 112, 0.6); }
+.orb-yellow.lit { background: #eab949; box-shadow: 0 0 10px rgba(234, 185, 73, 0.6); }
+.orb-green.lit { background: #4ec483; box-shadow: 0 0 10px rgba(78, 196, 131, 0.6); }
+.orb-purple.lit { background: #b48be8; box-shadow: 0 0 10px rgba(180, 139, 232, 0.6); }
+.orb-silver.lit { background: #d4dceb; box-shadow: 0 0 10px rgba(212, 220, 235, 0.6); }
+
+/* 居合の一閃 */
+.slash-stage {
+  position: relative;
+  width: min(460px, 92%);
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 9, 18, 0.94);
+  border: 2px solid rgba(212, 220, 235, 0.4);
+  border-radius: 6px;
+  padding: 16px 20px;
+  overflow: hidden;
+}
+
+.slash-line {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #67c6d8 35%, #e8eef7 50%, #67c6d8 65%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slash-line.active {
+  transform: rotate(-14deg);
+  animation: slashSweep 0.45s ease-out forwards;
+}
+
+.slash-line.second {
+  transform: rotate(14deg);
+  animation: slashSweep 0.45s ease-out forwards;
+}
+
+@keyframes slashSweep {
+  0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  35% { opacity: 0.95; clip-path: inset(0 0 0 0); }
+  100% { opacity: 0; clip-path: inset(0 0 0 100%); }
+}
+
+/* ダンジョン探検マップ（7x5） */
+.dungeon-map {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  width: min(460px, 96%);
+  padding: 8px;
+  background: #090d18;
+  border: 2px solid rgba(212, 220, 235, 0.45);
+  border-radius: 6px;
+}
+
+.dungeon-tile {
+  aspect-ratio: 1 / 1;
+  min-height: 36px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.dungeon-tile.tile-wall {
+  background: #141a2b;
+  border: 1px solid #1e2740;
+}
+
+.dungeon-tile.tile-floor {
+  background: #242e4a;
+  border: 1px solid #354266;
+}
+
+.dungeon-tile.tile-visited {
+  background: #2f3e66;
+  border-color: #4f6499;
+}
+
+.dungeon-tile.secret-open {
+  background: #314266;
+  border: 1px dashed var(--accent-cyan);
+}
+
+.dungeon-tile.decoy-tile {
+  background: #362d47;
+  border-color: var(--accent-purple);
+}
+
+.dungeon-tile.goal-tile {
+  background: #42361f;
+  border: 1px solid var(--accent-gold);
+}
+
+.dungeon-tile.warp-tile {
+  background: #3b2232;
+  border: 1px dashed var(--accent-red);
+}
+
+.tile-hero svg {
+  display: block;
+}
+
+.tile-goal-tag {
+  font-size: 0.65rem;
+  line-height: 1.1;
+  color: var(--accent-gold);
+  text-align: center;
+  padding: 0 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dungeon-tile.tile-wall {
+  background: repeating-linear-gradient(
+    90deg,
+    #141a2b 0px,
+    #141a2b 10px,
+    #1c253d 10px,
+    #1c253d 12px
+  );
+  border: 1px solid #1e2740;
+}
+
+.dungeon-tile.tile-dim {
+  opacity: 0.35;
+}
+
+/* ドラクエ風共通UIコンポーネント */
+.dq-panel {
+  position: relative;
+  background: rgba(11, 16, 33, 0.95);
+  border: 2px solid var(--border-outer);
+  border-radius: 5px;
+  padding: 10px 12px 8px;
+  box-shadow: inset 0 0 0 1px #0b0e17;
+}
+
+.dq-panel-title {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background: #0b1021;
+  padding: 0 6px;
+  font-size: 0.74rem;
+  color: var(--accent-cyan);
+}
+
+.dq-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(660px, 98%);
+}
+
+.dq-status-card {
+  min-width: 104px;
+  max-width: 145px;
+  background: rgba(11, 16, 33, 0.95);
+  border: 2px solid var(--border-outer);
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.dq-status-card .dq-st-name {
+  border-bottom: 1px solid rgba(212, 220, 235, 0.35);
+  margin-bottom: 3px;
+  padding-bottom: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dq-status-card .dq-st-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.dq-status-card.is-warn {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.dq-status-card.is-dead {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.dq-status-card.is-target {
+  box-shadow: 0 0 10px rgba(234, 185, 73, 0.45);
+}
+
+.dq-layout-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.dq-command-box {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  gap: 4px 12px;
+  min-width: 220px;
+}
+
+.dq-list-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 185px;
+}
+
+.dq-cmd {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.dq-cmd.active {
+  color: var(--accent-gold);
+  background: rgba(234, 185, 73, 0.12);
+}
+
 /* キーフレーム（視覚負荷を抑えた穏やかなアニメーション） */
 @keyframes blinkCursor {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  50% { opacity: 0.45; }
 }
 
 @keyframes spriteBounce {
   from { transform: translateY(0); }
-  to { transform: translateY(-5px); }
+  to { transform: translateY(-4px); }
 }
 
 @keyframes spriteFloat {
   from { transform: translateY(0) scale(1); }
-  to { transform: translateY(-8px) scale(1.02); }
+  to { transform: translateY(-6px) scale(1.015); }
 }
 
 @keyframes shakeLight {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-2px, 1px); }
-  50% { transform: translate(2px, -1px); }
-  75% { transform: translate(-1px, -1px); }
+  25% { transform: translate(-1.5px, 1px); }
+  50% { transform: translate(1.5px, -1px); }
+  75% { transform: translate(-1px, -0.5px); }
 }
 
 @keyframes shakeHeavy {
   0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-4px, 3px); }
-  40% { transform: translate(4px, -3px); }
-  60% { transform: translate(-3px, -2px); }
-  80% { transform: translate(3px, 2px); }
+  25% { transform: translate(-2.5px, 1.5px); }
+  50% { transform: translate(2.5px, -1.5px); }
+  75% { transform: translate(-1.5px, 1px); }
 }
 
 @keyframes flashBurst {
-  0% { opacity: 0.28; }
+  0% { opacity: 0.18; }
   100% { opacity: 0; }
 }
 
@@ -1194,10 +1818,9 @@ button, input, select, textarea {
   to { box-shadow: 0 0 12px rgba(234, 185, 73, 0.65); }
 }
 
-@keyframes reelBlur {
-  0% { transform: translateY(-1px); opacity: 0.88; }
-  50% { transform: translateY(1px); opacity: 1; }
-  100% { transform: translateY(-1px); opacity: 0.88; }
+@keyframes reelScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(var(--loop-px, -252px)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1209,7 +1832,7 @@ button, input, select, textarea {
   .cursor-tri,
   .message-cursor,
   .casino-lamp.reach,
-  .reel-col.spinning .reel-cell-main {
+  .reel-strip.is-spinning {
     animation: none !important;
   }
   .stage-flash {

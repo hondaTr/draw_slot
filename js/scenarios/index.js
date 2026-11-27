@@ -13,6 +13,11 @@ import { runSwordScenario } from './sword.js';
 import { runVoyageScenario } from './voyage.js';
 import { runPotScenario } from './pot.js';
 import { runYesNoScenario } from './yesno.js';
+import { runRingScenario } from './ring.js';
+import { runPhoenixScenario } from './phoenix.js';
+import { runSlashScenario } from './slash.js';
+import { runDungeonScenario } from './dungeon.js';
+import { runArenaScenario } from './arena.js';
 
 export const SCENARIO_MAP = {
   treasure: { name: '宝箱あけ', run: runTreasureScenario },
@@ -27,6 +32,11 @@ export const SCENARIO_MAP = {
   voyage: { name: '旅と船', run: runVoyageScenario },
   pot: { name: '民家のツボ・タンス', run: runPotScenario },
   yesno: { name: 'はい／いいえループ', run: runYesNoScenario },
+  ring: { name: '指輪の選択', run: runRingScenario },
+  phoenix: { name: '不死鳥の祭壇', run: runPhoenixScenario },
+  slash: { name: '居合の一閃', run: runSlashScenario },
+  dungeon: { name: 'ダンジョン探検', run: runDungeonScenario },
+  arena: { name: 'モンスター闘技場', run: runArenaScenario },
 };
 
 const SCENARIO_KEYS = Object.keys(SCENARIO_MAP);
@@ -43,8 +53,11 @@ export async function executeDraw({ stage, members, settings }) {
   stage.resetRun();
 
   const safeRate = Math.max(0, Math.min(40, Number(settings.safeRate) || 0)) / 100;
-  const isSafe = Math.random() < safeRate;
+  let isSafe = Math.random() < safeRate;
   const winner = isSafe ? null : pickWinner(members);
+  if (!isSafe && !winner) {
+    isSafe = true;
+  }
   const decoy = pickDecoy(members, winner);
   const route = chooseRoute(isSafe);
 

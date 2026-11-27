@@ -2,7 +2,7 @@ import { audio } from '../audio.js';
 import { getSpriteSvg } from '../sprites.js';
 import { escapeHtml } from '../stage.js';
 
-function renderPotScene({ rightSprite = 'pot', badge = 'だれかの いえ（勝手に入った）', aura = 'aura-wood', note = '', showVillager = false }) {
+function renderPotScene({ rightSprite = 'pot', badge = 'だれかの いえ', aura = 'aura-wood', note = '', showVillager = false }) {
   return `
     <div class="chest-aura-badge ${aura}">${escapeHtml(badge)}</div>
     <div class="scene-row">
@@ -18,13 +18,12 @@ export async function runPotScenario(ctx) {
   const { stage, drawTitle, isSafe, winner, decoy, route } = ctx;
 
   stage.setTheme('field');
-  stage.setQuestLabel('名もなき村・だれかの民家');
+  stage.setQuestLabel('名もなき村・民家');
   audio.startBgm('field');
 
-  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: 'あいさつもせず 他人の家に入った', note: 'ツボが ならんでいる…' }));
-  await stage.typeText('ゆうしゃは 知らない人の いえに かってに あがりこんだ！\n（RPGでは よくあること）', { pauseAfterMs: 650 });
+  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: '民家に はいった', note: 'ツボが ならんでいる' }));
+  await stage.typeText('ゆうしゃは 村の 民家に あがりこんだ。', { pauseAfterMs: 450 });
 
-  // プレミア：1個目のツボから一発
   if (route === 'premier') {
     audio.playSe('attack');
     stage.shake('light');
@@ -33,70 +32,66 @@ export async function runPotScenario(ctx) {
       rightSprite: 'scroll',
       badge: '1個目のツボを わった！',
       aura: 'aura-gold',
-      note: `${winner.name} のメモ`,
+      note: winner.name,
     }));
-    await stage.typeText(`ガシャン！ 1個目の ツボを わったら メモが でてきた！\n「次の ${drawTitle} は ${winner.name}」と かいてある！`, { pauseAfterMs: 800 });
+    await stage.typeText(`ガシャン！ 1個目の ツボから メモが でてきた！\n「今回の ${drawTitle}：${winner.name}」と かいてある！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // ツボを順番に割る
   audio.playSe('attack');
   stage.shake('light');
-  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: '1個目のツボ… ガシャン！', note: 'やくそう を みつけた！' }));
-  await stage.typeText('ツボを もちあげて なげた！\nしかし 中身は「やくそう」だった。', { pauseAfterMs: 600 });
+  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: '1個目のツボ… ガシャン！', note: 'やくそう を みつけた' }));
+  await stage.typeText('ツボを わった！ ……中身は「やくそう」だった。', { pauseAfterMs: 450 });
 
   audio.playSe('attack');
   stage.shake('light');
-  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: '2個目のツボ… ガシャン！', note: '5ゴールド を てにいれた！' }));
-  await stage.typeText('つづいて となりの ツボも わった！\n5ゴールド を てにいれた！ ……まだ メモはない。', { pauseAfterMs: 650 });
+  stage.setVisualHtml(renderPotScene({ rightSprite: 'pot', badge: '2個目のツボ… ガシャン！', note: '5ゴールド を てにいれた' }));
+  await stage.typeText('となりの ツボも わった！ 5ゴールド を てにいれた！', { pauseAfterMs: 450 });
 
-  // セーフ：ちいさなメダルしか出ない
   if (isSafe) {
     audio.playSe('cursor');
     stage.setVisualHtml(renderPotScene({
       rightSprite: 'scroll',
-      badge: 'タンスも かってに しらべた！',
+      badge: 'タンスの 中を しらべた',
       aura: 'aura-wood',
-      note: 'ちいさな メダル（メモなし）',
+      note: 'ちいさな メダル',
     }));
-    await stage.typeText('タンスの中まで くまなく しらべたが「ちいさな メダル」しか なかった！\nメモは みつからなかった！ 今回は ぜんいん セーフ！', { pauseAfterMs: 850 });
+    await stage.typeText('タンスからは「ちいさな メダル」しか 見つからなかった。\n今回は ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：家主に怒られて外に出される → 外のタルから本命
   if (route === 'reverse') {
     audio.playSe('confirm');
     stage.setVisualHtml(renderPotScene({
       rightSprite: 'scroll',
-      badge: 'タンスの 引き出しを しらべた！',
+      badge: 'タンスの 引き出しを しらべた',
       aura: 'aura-gold',
       note: `メモ：${decoy.name} ？`,
     }));
-    await stage.typeText(`タンスの おくから「${decoy.name}」の 名前メモを みつけた……！`, { pauseAfterMs: 700 });
+    await stage.typeText(`タンスの おくから「${decoy.name}」の メモを みつけた……！`, { pauseAfterMs: 520 });
 
     audio.playSe('encounter');
     stage.shake('light');
     stage.setVisualHtml(renderPotScene({
       rightSprite: 'pot',
       showVillager: true,
-      badge: '家主「ちょっと まって！！」',
+      badge: '家主「かってに ツボを わらないでください！」',
       aura: 'aura-red',
-      note: 'ツボを わらないで ください！',
+      note: 'おいだされて しまった！',
     }));
-    await stage.typeText(`家主「ちょっと！ かってに 人のうちの ツボを わらないで ください！！」\n（めずらしく おこられた！）`, { pauseAfterMs: 750 });
+    await stage.typeText('家主「ちょっと！ かってに 人のうちの ツボを わらないで ください！」', { pauseAfterMs: 580 });
 
     stage.setVisualHtml(renderPotScene({
       rightSprite: 'scroll',
-      badge: '家の外にある タルを しらべた…',
+      badge: '家の外の タルを しらべた…',
       aura: 'aura-gold',
-      note: `ほんとうのメモ：${winner.name}`,
+      note: winner.name,
     }));
     audio.playSe('chest');
-    await stage.typeText(`おいだされた 家のまえの タルを なんとなく しらべたら…\n「ほんとうの ${drawTitle} は ${winner.name}」と かかれた メモを みつけた！`, { pauseAfterMs: 850 });
+    await stage.typeText(`おいだされた 家のまえの タルから ほんとうの メモを みつけた！\n「今回の ${drawTitle}：${winner.name}」と かいてある！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常：タンスから発見
   audio.playSe('chest');
   stage.setVisualHtml(renderPotScene({
     rightSprite: 'scroll',
@@ -104,5 +99,5 @@ export async function runPotScenario(ctx) {
     aura: 'aura-gold',
     note: winner.name,
   }));
-  await stage.typeText(`タンスの なかから おきわすれられた メモを みつけた！\n「今回の ${drawTitle}：${winner.name}」と かいてある！`, { pauseAfterMs: 800 });
+  await stage.typeText(`タンスから メモを みつけた！\n「今回の ${drawTitle}：${winner.name}」と かいてある！`, { pauseAfterMs: 600 });
 }

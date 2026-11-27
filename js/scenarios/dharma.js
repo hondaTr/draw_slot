@@ -2,15 +2,28 @@ import { audio } from '../audio.js';
 import { getSpriteSvg } from '../sprites.js';
 import { escapeHtml } from '../stage.js';
 
-function renderDharmaScene({ badge = 'ダーマの神殿', candidate = '？？？', aura = 'aura-wood', priestGlow = false }) {
+function renderDharmaScene({
+  badge = 'ダーマの神殿',
+  candidate = '？？？',
+  aura = 'aura-wood',
+  priestGlow = false,
+  drawTitle = '幹事',
+  jobIdx = 4,
+}) {
+  const jobs = ['せんし', 'ぶとうか', 'まほうつかい', 'あそびにん', drawTitle];
+  const jobHtml = jobs
+    .map((j, idx) => `<div class="dq-cmd ${idx === jobIdx ? 'active' : ''}">${idx === jobIdx ? '▶' : '　'} ${escapeHtml(j)}</div>`)
+    .join('');
+
   return `
     <div class="chest-aura-badge ${aura}">${escapeHtml(badge)}</div>
-    <div class="scene-row">
+    <div class="dq-layout-row">
       <div class="sprite-wrap ${priestGlow ? 'sprite-glow-gold sprite-float' : 'sprite-bounce'}">
-        ${getSpriteSvg('priest', 104)}
+        ${getSpriteSvg('priest', 98)}
       </div>
-      <div class="sprite-wrap sprite-bounce">
-        ${getSpriteSvg('hero', 92)}
+      <div class="dq-panel">
+        <span class="dq-panel-title">てんしょくさき</span>
+        <div class="dq-list-box">${jobHtml}</div>
       </div>
     </div>
     <div class="name-scroll-box">${escapeHtml(candidate)}</div>
@@ -24,79 +37,87 @@ export async function runDharmaScenario(ctx) {
   stage.setQuestLabel('ダーマの神殿');
   audio.startBgm('field');
 
-  stage.setVisualHtml(renderDharmaScene({ badge: '転職のカウンター', candidate: 'つぎの かた どうぞ〜' }));
-  await stage.typeText(`しんかん「ダーマの神殿へ ようこそ！ どの職業……ではなく『${drawTitle}』に てんしょく しますか？」`, { pauseAfterMs: 700 });
+  stage.setVisualHtml(renderDharmaScene({ badge: '転職の祭壇', candidate: '神殿の光が ゆれている…', drawTitle, jobIdx: 4 }));
+  await stage.typeText(`しんかん「ダーマの神殿へ ようこそ！ 新たな『${drawTitle}』への 転身を とりおこないます。」`, { pauseAfterMs: 500 });
 
-  // プレミア：あそびにんだけはレベル不問でなれるあるある
   if (route === 'premier') {
     audio.playSe('upgrade');
     stage.flash('gold');
     stage.setVisualHtml(renderDharmaScene({
-      badge: '「あそびにん」なら すぐ なれる！',
+      badge: '条件を みたした！',
       candidate: winner.name,
       aura: 'aura-gold',
       priestGlow: true,
+      drawTitle,
+      jobIdx: 4,
     }));
-    await stage.typeText(`しんかん「あ、ごめんなさい。いま 空いてるのが『${drawTitle}』だけなんです！」\nというわけで「${winner.name}」が すんなり 決定した！`, { pauseAfterMs: 850 });
+    await stage.typeText(`「${winner.name}」の まえに 光の柱が おりてきた！\nしんかん「おめでとう！『${winner.name}』が『${drawTitle}』に きまりました！」`, { pauseAfterMs: 650 });
     return;
   }
 
   const pool = members.length > 0 ? members : [decoy];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 6; i++) {
     stage.checkAborted();
     const m = pool[i % pool.length];
     audio.playSe('cursor');
     stage.setVisualHtml(renderDharmaScene({
-      badge: '名簿を めくっている…',
+      badge: '適性を しらべている…',
       candidate: m.name,
       aura: 'aura-red',
+      drawTitle,
+      jobIdx: i < 4 ? i : 4,
     }));
-    await stage.wait(130 + i * 24);
+    await stage.wait(110 + i * 20);
   }
 
-  // セーフ：きょうは ゆうきゅうきゅうか
   if (isSafe) {
     audio.playSe('miss');
     stage.setVisualHtml(renderDharmaScene({
-      badge: '神殿の シャッターが しまった',
-      candidate: '本日は ゆうきゅうきゅうか',
+      badge: '力が まだ たりないようだ',
+      candidate: 'また 出直そう',
       aura: 'aura-wood',
+      drawTitle,
+      jobIdx: 4,
     }));
-    await stage.typeText('しんかん「あ、5時になったので きょうの 受付は おしまいです！」\nなんと 神殿が 閉まってしまった！ 今回は ぜんいん セーフ！', { pauseAfterMs: 850 });
+    await stage.typeText('しんかん「いまは だれも 転身の条件を みたしていないようです。」\n今回は ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：レベル20に たりません！
   if (route === 'reverse') {
     stage.setVisualHtml(renderDharmaScene({
-      badge: '転職の手続き中…',
+      badge: '転職の儀 開始',
       candidate: decoy.name,
       aura: 'aura-gold',
+      drawTitle,
+      jobIdx: 4,
     }));
-    await stage.typeText(`しんかん「はい、『${decoy.name}』さんを『${drawTitle}』に――」`, { pauseAfterMs: 700 });
+    await stage.typeText(`しんかん「では『${decoy.name}』さんを『${drawTitle}』に――」`, { pauseAfterMs: 480 });
 
     audio.playSe('miss');
     stage.setVisualHtml(renderDharmaScene({
-      badge: 'レベル19だった！（あと1！）',
+      badge: 'レベル19だった！',
       candidate: `${decoy.name} → レベル20に たりません！`,
       aura: 'aura-red',
+      drawTitle,
+      jobIdx: 4,
     }));
-    await stage.typeText(`しんかん「おっと、『${decoy.name}』さんは レベル19ですね！ 20に たりません！」\n（あるある！ レベル1つ たりない！）`, { pauseAfterMs: 750 });
+    await stage.typeText(`しんかん「おっと、『${decoy.name}』さんは レベル19ですね！ あと1 たりません！」`, { pauseAfterMs: 520 });
 
-    await stage.showCutin('では レベル20いじょうの かた！', 950);
+    await stage.showCutin('レベル20いじょうの かたを 発見！', 850);
     audio.playSe('revive');
     stage.flash('gold');
     stage.setVisualHtml(renderDharmaScene({
-      badge: 'ちょうど レベル20 だった！',
+      badge: '条件クリア！',
       candidate: winner.name,
       aura: 'aura-gold',
       priestGlow: true,
+      drawTitle,
+      jobIdx: 4,
     }));
-    await stage.typeText(`しんかん「後ろに ならんでいた『${winner.name}』さんは レベル20ですね！ 決定です！」\nこうして「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`しんかん「うしろにいた『${winner.name}』さんが ちょうど レベル20でした！」\n「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常
   audio.playSe('revive');
   stage.flash('gold');
   stage.setVisualHtml(renderDharmaScene({
@@ -104,6 +125,8 @@ export async function runDharmaScenario(ctx) {
     candidate: winner.name,
     aura: 'aura-gold',
     priestGlow: true,
+    drawTitle,
+    jobIdx: 4,
   }));
-  await stage.typeText(`しんかん「おめでとうございます！『${winner.name}』さんは『${drawTitle}』に なりました！」`, { pauseAfterMs: 800 });
+  await stage.typeText(`しんかん「おめでとうございます！『${winner.name}』さんが『${drawTitle}』に きまりました！」`, { pauseAfterMs: 600 });
 }

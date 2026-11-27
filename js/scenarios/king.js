@@ -2,7 +2,7 @@ import { audio } from '../audio.js';
 import { getSpriteSvg } from '../sprites.js';
 import { escapeHtml } from '../stage.js';
 
-function renderKingScene({ boardMembers, selectedIdx = -1, decoyIdx = -1, rewrittenIdx = -1, bannerText = '' }) {
+function renderKingScene({ boardMembers, selectedIdx = -1, decoyIdx = -1, rewrittenIdx = -1, bannerText = '', showSupply = false }) {
   const slots = boardMembers
     .map((m, idx) => {
       let cls = 'king-slot';
@@ -13,9 +13,23 @@ function renderKingScene({ boardMembers, selectedIdx = -1, decoyIdx = -1, rewrit
     })
     .join('');
 
+  const supplyHtml = showSupply
+    ? `
+      <div class="dq-panel">
+        <span class="dq-panel-title">たびの しきゅうひん</span>
+        <div class="dq-list-box">
+          <div class="dq-cmd active">▶ 50ゴールド</div>
+          <div class="dq-cmd">　 ひのきのぼう</div>
+          <div class="dq-cmd">　 ぬののふく</div>
+        </div>
+      </div>
+    `
+    : '';
+
   return `
-    <div class="scene-row">
-      <div class="sprite-wrap sprite-bounce">${getSpriteSvg('king', 96)}</div>
+    <div class="dq-layout-row">
+      <div class="sprite-wrap sprite-bounce">${getSpriteSvg('king', 92)}</div>
+      ${supplyHtml}
     </div>
     ${bannerText ? `<div class="chest-aura-badge aura-gold">${escapeHtml(bannerText)}</div>` : ''}
     <div class="king-board">${slots}</div>
@@ -41,20 +55,19 @@ export async function runKingScenario(ctx) {
   let decoyIdx = decoy ? board.findIndex((m) => m.id === decoy.id) : 0;
   if (decoyIdx < 0) decoyIdx = 0;
 
-  stage.setVisualHtml(renderKingScene({ boardMembers: board, bannerText: `お題：${drawTitle}` }));
-  await stage.typeText(`おうさま「よくぞ きた！ 次の『${drawTitle}』を きめると しよう！」\n「なお 旅のしきんは 50ゴールドと ひのきのぼう じゃ！（少なっ）」`, { pauseAfterMs: 750 });
+  stage.setVisualHtml(renderKingScene({ boardMembers: board, bannerText: `お題：${drawTitle}`, showSupply: true }));
+  await stage.typeText(`おうさま「よくぞ きた！ 次の『${drawTitle}』を きめると しよう！\n旅のしきんは 50ゴールドと ひのきのぼう じゃ！」`, { pauseAfterMs: 550 });
 
-  // プレミア：会話連打で同じことをもう一度聞くあるある → 即決定
   if (route === 'premier') {
     audio.playSe('confirm');
     stage.flash('gold');
-    stage.setVisualHtml(renderKingScene({ boardMembers: board, rewrittenIdx: winnerIdx, bannerText: `もういちど ききますか？ → いいえ` }));
-    await stage.typeText(`おうさま「今回の『${drawTitle}』は『${winner.name}』じゃ！\n……わしの はなしを もういちど きくかね？」（Aボタン連打で 2回きいてしまった！）`, { pauseAfterMs: 850 });
+    stage.setVisualHtml(renderKingScene({ boardMembers: board, rewrittenIdx: winnerIdx, bannerText: `決定：${winner.name}` }));
+    await stage.typeText(`おうさま「今回の『${drawTitle}』は『${winner.name}』じゃ！\nよろしく たのんだぞ！」`, { pauseAfterMs: 650 });
     return;
   }
 
   const targetIdx = isSafe ? decoyIdx : route === 'reverse' ? decoyIdx : winnerIdx;
-  const totalSteps = board.length * 2 + ((targetIdx + board.length) % board.length) + board.length;
+  const totalSteps = board.length + ((targetIdx + board.length) % board.length) + board.length;
   let current = 0;
 
   for (let step = 0; step <= totalSteps; step++) {
@@ -63,25 +76,23 @@ export async function runKingScenario(ctx) {
     audio.playSe('cursor');
     stage.setVisualHtml(renderKingScene({ boardMembers: board, selectedIdx: current, bannerText: '王様が 名簿を みている…' }));
     const progress = step / totalSteps;
-    const delay = progress < 0.65 ? 75 : progress < 0.88 ? 165 : 300;
+    const delay = progress < 0.65 ? 65 : progress < 0.88 ? 140 : 250;
     await stage.wait(delay);
   }
 
-  // セーフ：王様が同じセリフを言うだけのNPC化
   if (isSafe) {
     audio.playSe('miss');
-    stage.setVisualHtml(renderKingScene({ boardMembers: board, selectedIdx: -1, bannerText: 'おうさま「きょうは いい てんきじゃのう」' }));
-    await stage.typeText('おうさま「……きょうは いい てんきじゃのう」\n王様が 世間話しか しなくなった！ 今回は ぜんいん セーフ！', { pauseAfterMs: 850 });
+    stage.setVisualHtml(renderKingScene({ boardMembers: board, selectedIdx: -1, bannerText: 'おうさま「……またの きかいに しよう」' }));
+    await stage.typeText('おうさま「うむ、今回は だれも えらばず 見送ると しよう！」\n今回は ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：老眼でとなりの人を見ていた（1コマ滑り）
   if (route === 'reverse') {
     const fakeName = board[current].name;
-    stage.setVisualHtml(renderKingScene({ boardMembers: board, decoyIdx: current, bannerText: `仮：${fakeName} かな？` }));
-    await stage.typeText(`おうさま「うむ！ 今回の『${drawTitle}』は『${fakeName}』に――」`, { pauseAfterMs: 750 });
+    stage.setVisualHtml(renderKingScene({ boardMembers: board, decoyIdx: current, bannerText: `仮：${fakeName}` }));
+    await stage.typeText(`おうさま「うむ！ 今回の『${drawTitle}』は『${fakeName}』に――」`, { pauseAfterMs: 520 });
 
-    await stage.showCutin('ろうがんで みまちがえた！！', 1000);
+    await stage.showCutin('名簿の 行が ずれていた！', 850);
 
     audio.playSe('confirm');
     stage.flash('gold');
@@ -91,18 +102,17 @@ export async function runKingScenario(ctx) {
       for (let h = 1; h <= hops; h++) {
         slide = (current + h) % board.length;
         audio.playSe('cursor');
-        stage.setVisualHtml(renderKingScene({ boardMembers: board, selectedIdx: slide, bannerText: 'めがねを かけなおした…' }));
-        await stage.wait(210);
+        stage.setVisualHtml(renderKingScene({ boardMembers: board, selectedIdx: slide, bannerText: '名簿を 読みなおしている…' }));
+        await stage.wait(170);
       }
     }
     stage.setVisualHtml(renderKingScene({ boardMembers: board, rewrittenIdx: winnerIdx, bannerText: `決定：${winner.name}` }));
-    await stage.typeText(`だいじん「王様、めがねが ズレております！」\nおうさま「おっと すまん！ ほんとうは『${winner.name}』じゃった！！」`, { pauseAfterMs: 850 });
+    await stage.typeText(`だいじん「王様、名簿を 1行 見まちがえております！」\nおうさま「おお すまん！ ほんとうは『${winner.name}』じゃった！」`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常：確定
   audio.playSe('confirm');
   stage.flash('gold');
   stage.setVisualHtml(renderKingScene({ boardMembers: board, rewrittenIdx: winnerIdx, bannerText: `決定：${winner.name}` }));
-  await stage.typeText(`おうさま「うむ！ 次の『${drawTitle}』は『${winner.name}』に まかせたぞ！」`, { pauseAfterMs: 800 });
+  await stage.typeText(`おうさま「うむ！ 次の『${drawTitle}』は『${winner.name}』に まかせたぞ！」`, { pauseAfterMs: 600 });
 }

@@ -2,7 +2,15 @@ import { audio } from '../audio.js';
 import { getSpriteSvg } from '../sprites.js';
 import { escapeHtml } from '../stage.js';
 
-function renderMetalScene({ monster = 'metal', monsterState = 'float', label = 'はぐれメタルが あらわれた！', attacker = '' }) {
+const METAL_COMMANDS = ['たたかう', 'とくぎ', 'どうぐ', 'にげる'];
+
+function renderMetalScene({
+  monster = 'metal',
+  monsterState = 'float',
+  label = 'はぐれメタルが あらわれた！',
+  partyStates = [],
+  activeCmd = 0,
+}) {
   const spriteCls =
     monsterState === 'vanish'
       ? 'sprite-vanish'
@@ -10,18 +18,36 @@ function renderMetalScene({ monster = 'metal', monsterState = 'float', label = '
       ? 'sprite-hit'
       : 'sprite-float';
 
+  const statusHtml = partyStates
+    .map((p) => `
+      <div class="dq-status-card ${p.active ? 'is-target' : ''}">
+        <div class="dq-st-name">${escapeHtml(p.name)}</div>
+        <div class="dq-st-row"><span>H</span><span>${p.hp}</span></div>
+        <div class="dq-st-row"><span>M</span><span>${p.mp}</span></div>
+      </div>
+    `)
+    .join('');
+
+  const cmdHtml = METAL_COMMANDS.map((c, idx) => {
+    const isAct = idx === activeCmd;
+    return `<div class="dq-cmd ${isAct ? 'active' : ''}">${isAct ? '▶' : '　'} ${c}</div>`;
+  }).join('');
+
   return `
-    <div class="chest-aura-badge aura-gold">${escapeHtml(label)}</div>
-    <div class="scene-row">
-      <div class="sprite-wrap sprite-bounce">${getSpriteSvg('hero', 94)}</div>
+    <div class="dq-status-bar">${statusHtml}</div>
+    <div class="dq-layout-row">
+      <div class="dq-panel">
+        <span class="dq-panel-title">コマンド</span>
+        <div class="dq-command-box">${cmdHtml}</div>
+      </div>
       <div class="sprite-wrap ${spriteCls}">${getSpriteSvg(monster, 108)}</div>
     </div>
-    ${attacker ? `<div class="name-scroll-box">${escapeHtml(attacker)}</div>` : ''}
+    <div class="chest-aura-badge aura-gold">${escapeHtml(label)}</div>
   `;
 }
 
 export async function runMetalScenario(ctx) {
-  const { stage, drawTitle, isSafe, winner, decoy, route } = ctx;
+  const { stage, members, drawTitle, isSafe, winner, decoy, route } = ctx;
 
   stage.setTheme('metal');
   stage.setQuestLabel('メタルのめいきゅう');
@@ -31,84 +57,101 @@ export async function runMetalScenario(ctx) {
   const monsterType = isKing ? 'king_metal' : 'metal';
   const monsterName = isKing ? 'メタルキング' : 'はぐれメタル';
 
+  const sampleParty = members.slice(0, 4).map((m, idx) => ({
+    name: m.name,
+    hp: 150 + idx * 10,
+    mp: 24 + idx * 6,
+    active: false,
+  }));
+
   stage.setVisualHtml(renderMetalScene({
     monster: monsterType,
     monsterState: 'float',
     label: `${monsterName} が あらわれた！`,
-    attacker: 'にげるまえに たおしたい！',
+    partyStates: sampleParty,
+    activeCmd: 0,
   }));
-  await stage.typeText(`${monsterName}が あらわれた！\n（たおせたら ${drawTitle} が きまるぞ！）`, { pauseAfterMs: 700 });
+  await stage.typeText(`${monsterName}が あらわれた！\nたおせたら「${drawTitle}」が きまるぞ！`, { pauseAfterMs: 480 });
 
   audio.startBgm('battle');
 
-  // プレミア：1ターン目まじん斬りが当たった！
   if (isKing) {
-    await stage.typeText(`「${winner.name}」は いちかばちか まじん斬りを はなった！`, { pauseAfterMs: 600 });
+    stage.setVisualHtml(renderMetalScene({
+      monster: 'king_metal',
+      monsterState: 'float',
+      label: `${winner.name} の こんしんのいちげき！`,
+      partyStates: sampleParty.map((p) => ({ ...p, active: p.name === winner.name })),
+      activeCmd: 1,
+    }));
+    await stage.typeText(`「${winner.name}」は こんしんの いちげきを はなった！`, { pauseAfterMs: 420 });
     audio.playSe('critical');
     stage.flash('gold');
     stage.shake('light');
     stage.setVisualHtml(renderMetalScene({
       monster: 'king_metal',
       monsterState: 'hit',
-      label: 'めずらしく あたった！！',
-      attacker: `${winner.name} の かいしんのいちげき！`,
+      label: 'かいしんの いちげき！',
+      partyStates: sampleParty.map((p) => ({ ...p, active: p.name === winner.name })),
+      activeCmd: 1,
     }));
-    await stage.typeText(`めったに 当たらない まじん斬りが あたった！！\n「${winner.name}」が メタルキングを たおして「${drawTitle}」に きまった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`こんしんの いちげきが みごと あたった！\n「${winner.name}」が メタルキングを たおし「${drawTitle}」に きまった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 1手目：1ダメージ or ミス（あるある）
   stage.setVisualHtml(renderMetalScene({
     monster: 'metal',
     monsterState: 'float',
-    label: 'こうげき！',
-    attacker: `${decoy.name} の こうげき！`,
+    label: `${decoy.name} の こうげき！`,
+    partyStates: sampleParty.map((p) => ({ ...p, active: p.name === decoy.name })),
+    activeCmd: 0,
   }));
   audio.playSe('attack');
-  await stage.wait(280);
+  await stage.wait(220);
   audio.playSe('miss');
-  await stage.typeText(`「${decoy.name}」の こうげき！ ……${monsterName}に 1の ダメージ！\n（どくばり でも 1ダメージ…）`, { pauseAfterMs: 700 });
+  await stage.typeText(`「${decoy.name}」の こうげき！ ${monsterName}に 1の ダメージ！`, { pauseAfterMs: 480 });
 
-  // セーフ：お約束の即逃走
   if (isSafe) {
     audio.playSe('flee');
     stage.setVisualHtml(renderMetalScene({
       monster: 'metal',
       monsterState: 'vanish',
-      label: 'お約束の 即逃走！',
-      attacker: `${monsterName} は にげだした！`,
+      label: `${monsterName} は にげだした！`,
+      partyStates: sampleParty,
+      activeCmd: 3,
     }));
-    await stage.typeText(`${monsterName}は 1ターン目に さっさと にげだした！\n（だいたい いつも こうなる！） 今回は ぜんいん セーフ！`, { pauseAfterMs: 850 });
+    await stage.typeText(`${monsterName}は すばやく にげだした！\n今回は ぜんいん セーフ！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：にげだした！ → もう1ぴき のこっていた！（仲間B）
   if (route === 'reverse') {
     audio.playSe('flee');
     stage.setVisualHtml(renderMetalScene({
       monster: 'metal',
       monsterState: 'vanish',
-      label: 'にげられた…！？',
-      attacker: `${monsterName} は にげだした！`,
+      label: `${monsterName} は にげだした！`,
+      partyStates: sampleParty,
+      activeCmd: 3,
     }));
-    await stage.typeText(`${monsterName}は にげだした！\n「あーあ、きょうも 経験値ゼロか…」と おもった そのとき！`, { pauseAfterMs: 850 });
+    await stage.typeText(`${monsterName}は にげだした！ ……と思われた そのとき！`, { pauseAfterMs: 550 });
 
-    await stage.showCutin('はぐれメタルB が のこっていた！', 950);
+    await stage.showCutin('はぐれメタルB が のこっていた！', 850);
     stage.setVisualHtml(renderMetalScene({
       monster: 'metal',
       monsterState: 'float',
-      label: 'なぜか ようすを みている！',
-      attacker: `${winner.name} の こうげき！`,
+      label: 'はぐれメタルB は ようすを みている！',
+      partyStates: sampleParty.map((p) => ({ ...p, active: p.name === winner.name })),
+      activeCmd: 1,
     }));
-    await stage.typeText(`1ぴきだけ 逃げそびれて ようすを みていた！\nそこに「${winner.name}」の どくばりが きゅうしょに 刺さった！！`, { pauseAfterMs: 700 });
+    await stage.typeText(`もう1ぴきが 逃げそびれて ようすを みていた！\n「${winner.name}」が すかさず きゅうしょを ついた！`, { pauseAfterMs: 500 });
   } else {
     stage.setVisualHtml(renderMetalScene({
       monster: 'metal',
       monsterState: 'float',
-      label: 'ようすを みている…',
-      attacker: `${winner.name} の こうげき！`,
+      label: `${monsterName} は ようすを みている…`,
+      partyStates: sampleParty.map((p) => ({ ...p, active: p.name === winner.name })),
+      activeCmd: 1,
     }));
-    await stage.typeText(`${monsterName}は なぜか にげずに ようすを みている！\n「${winner.name}」が きゅうしょを ねらった！`, { pauseAfterMs: 700 });
+    await stage.typeText(`${monsterName}は ようすを みている！\n「${winner.name}」が するどい いちげきを はなった！`, { pauseAfterMs: 480 });
   }
 
   audio.playSe('critical');
@@ -116,8 +159,9 @@ export async function runMetalScenario(ctx) {
   stage.setVisualHtml(renderMetalScene({
     monster: 'metal',
     monsterState: 'hit',
-    label: 'かいしんの いちげき！！',
-    attacker: `${winner.name} が たおした！`,
+    label: `${winner.name} の かいしんの いちげき！`,
+    partyStates: sampleParty.map((p) => ({ ...p, active: p.name === winner.name })),
+    activeCmd: 1,
   }));
-  await stage.typeText(`かいしんの いちげき！！\n${monsterName}を たおし、「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 800 });
+  await stage.typeText(`かいしんの いちげき！\n${monsterName}を たおし、「${winner.name}」が「${drawTitle}」に きまった！`, { pauseAfterMs: 600 });
 }

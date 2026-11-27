@@ -1,6 +1,7 @@
 import { audio } from './audio.js';
 import {
   WEIGHT_OPTIONS,
+  SPEED_OPTIONS,
   loadState,
   saveState,
   getActiveGroup,
@@ -63,7 +64,6 @@ const el = {
   selectScenario: document.getElementById('select-scenario'),
   rangeSafeRate: document.getElementById('range-safe-rate'),
   labelSafeRate: document.getElementById('label-safe-rate'),
-  chkFastMode: document.getElementById('chk-fast-mode'),
   chkReducedEffects: document.getElementById('chk-reduced-effects'),
 };
 
@@ -74,7 +74,7 @@ function persist(nextState) {
 
 function syncAudioAndSpeed() {
   audio.setMode(state.settings.soundMode);
-  stage.setFastMode(state.settings.fastMode);
+  stage.setSpeedMultiplier(state.settings.speedMultiplier);
   stage.setReducedEffects(state.settings.reducedEffects);
 }
 
@@ -88,11 +88,11 @@ function renderHeaderAndControls() {
   el.btnDrawTitle.textContent = title;
   el.activeMemberCount.textContent = String(enabled.length);
 
-  // 時短表示
-  const fast = state.settings.fastMode;
-  el.btnToggleFast.classList.toggle('is-active', fast);
-  el.labelFastMode.textContent = fast ? '時短2x' : '通常';
-  el.chkFastMode.checked = fast;
+  // 演出スピード表示
+  const spd = state.settings.speedMultiplier || 1;
+  const spdLabelMap = { 0.5: '0.5x', 0.8: '0.8x', 1: '1x', 2: '2x' };
+  el.btnToggleFast.classList.toggle('is-active', spd !== 1);
+  el.labelFastMode.textContent = spdLabelMap[spd] || `${spd}x`;
 
   // サウンド表示
   const soundMap = { all: 'BGM+SE', se: 'SEのみ', mute: 'ミュート' };
@@ -108,6 +108,9 @@ function renderHeaderAndControls() {
 
   document.querySelectorAll('.sound-opt').forEach((btn) => {
     btn.classList.toggle('is-active', btn.dataset.sound === state.settings.soundMode);
+  });
+  document.querySelectorAll('.speed-opt').forEach((btn) => {
+    btn.classList.toggle('is-active', Number(btn.dataset.speed) === spd);
   });
 }
 
@@ -155,7 +158,6 @@ function renderSettingsModal() {
   el.selectScenario.value = state.settings.selectedScenario;
   el.rangeSafeRate.value = String(state.settings.safeRate);
   el.labelSafeRate.textContent = String(state.settings.safeRate);
-  el.chkFastMode.checked = state.settings.fastMode;
   el.chkReducedEffects.checked = Boolean(state.settings.reducedEffects);
 }
 
@@ -231,12 +233,16 @@ function bindEvents() {
     refreshAll({ resetStageToIdle: false });
   });
 
-  // 時短トグル
+  // 速度循環トグル (1 -> 2 -> 0.5 -> 0.8 -> 1)
   el.btnToggleFast.addEventListener('click', () => {
     audio.playSe('cursor');
+    const cycle = [1, 2, 0.5, 0.8];
+    const current = state.settings.speedMultiplier || 1;
+    const idx = cycle.indexOf(current);
+    const next = cycle[(idx + 1) % cycle.length];
     persist({
       ...state,
-      settings: { ...state.settings, fastMode: !state.settings.fastMode },
+      settings: { ...state.settings, speedMultiplier: next },
     });
     refreshAll();
   });
@@ -369,7 +375,9 @@ function bindEvents() {
       refreshAll({ resetStageToIdle: true });
     } else if (e.target.classList.contains('weight-select')) {
       audio.playSe('cursor');
-      persist(updateMember(state, memberId, { weight: Number(e.target.value) || 1 }));
+      const parsed = Number(e.target.value);
+      const weight = Number.isFinite(parsed) && parsed >= 0 ? parsed : 1;
+      persist(updateMember(state, memberId, { weight }));
       refreshAll({ resetStageToIdle: true });
     }
   });
@@ -445,10 +453,14 @@ function bindEvents() {
     });
   });
 
-  el.chkFastMode.addEventListener('change', (e) => {
-    audio.playSe('cursor');
-    persist({ ...state, settings: { ...state.settings, fastMode: e.target.checked } });
-    refreshAll();
+  document.querySelectorAll('.speed-opt').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      audio.playSe('cursor');
+      const val = Number(btn.dataset.speed);
+      const speedMultiplier = SPEED_OPTIONS.includes(val) ? val : 1;
+      persist({ ...state, settings: { ...state.settings, speedMultiplier } });
+      refreshAll();
+    });
   });
 
   el.chkReducedEffects.addEventListener('change', (e) => {

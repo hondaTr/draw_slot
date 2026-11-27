@@ -2,7 +2,7 @@ import { audio } from '../audio.js';
 import { getSpriteSvg } from '../sprites.js';
 import { escapeHtml } from '../stage.js';
 
-function renderVoyageScene({ enemy = null, shipState = 'float', badge = 'ふねで たびにでよう', aura = 'aura-wood', caption = '' }) {
+function renderVoyageScene({ enemy = null, shipState = 'float', badge = '海へ でよう', aura = 'aura-wood', caption = '' }) {
   return `
     <div class="chest-aura-badge ${aura}">${escapeHtml(badge)}</div>
     <div class="scene-row">
@@ -22,47 +22,42 @@ export async function runVoyageScenario(ctx) {
   stage.setQuestLabel('うみの上・船のたび');
   audio.startBgm('field');
 
-  stage.setVisualHtml(renderVoyageScene({ badge: 'ふねで 出発！', caption: `お題：${drawTitle}` }));
-  await stage.typeText(`「${drawTitle}」を きめる 島を さがして 船で こぎだした！\n（……なぜか 海では 2歩あるくごとに エンカウントする！）`, { pauseAfterMs: 700 });
+  stage.setVisualHtml(renderVoyageScene({ badge: '出航！ 宝の島を めざす', caption: `お題：${drawTitle}` }));
+  await stage.typeText(`「${drawTitle}」を きめる 島を さがして 船で こぎだした！\n波を けって 未知の 海域へ すすんでいく！`, { pauseAfterMs: 520 });
 
-  // プレミア：ルーラで直接飛んで一発
   if (route === 'premier') {
     audio.playSe('upgrade');
     stage.flash('gold');
     stage.setVisualHtml(renderVoyageScene({
       enemy: 'chest_gold',
-      badge: 'ルーラで ぴゅーん！',
+      badge: '追い風に のって 到着！',
       aura: 'aura-gold',
       caption: winner.name,
     }));
-    await stage.typeText(`「めんどくさいから ルーラで いいじゃん！」\nいっしゅんで 島に 到着！ メモには「${winner.name}」と かいてあった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`順風満帆で あっというまに 島に 到着！\nたてふだには「${winner.name}」と かいてあった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // あるある：ちずを さかさまに もっていた！
-  await stage.wait(280);
+  await stage.wait(220);
   audio.playSe('step');
   stage.setVisualHtml(renderVoyageScene({
-    badge: 'ちずを 見ながら すすむ…',
+    badge: '海図を みて すすむ…',
     aura: 'aura-red',
-    caption: isSafe ? 'あれ？ 島が ないぞ？' : `${decoy.name} 島についた…？`,
+    caption: isSafe ? '濃い 霧が たちこめてきた…' : `${decoy.name} の 方角へ…`,
   }));
-  await stage.typeText('「ちずでは このあたりに 島が あるはずなんだが……」', { pauseAfterMs: 650 });
+  await stage.typeText('「海図では このあたりに 島が あるはずなのだが……」', { pauseAfterMs: 500 });
 
-  // セーフ：ルーラで頭ぶつけて帰還
   if (isSafe) {
     audio.playSe('miss');
-    stage.shake('light');
     stage.setVisualHtml(renderVoyageScene({
-      badge: 'ごつん！！',
+      badge: '濃い霧で 前が みえない',
       aura: 'aura-wood',
-      caption: 'てんじょうに あたまを ぶつけた！',
+      caption: 'いったん 港へ ひきかえした',
     }));
-    await stage.typeText('いったん 戻ろうとして 船室のなかで ルーラを となえたら\nてんじょうに あたまを ぶつけた！ 今回は ぜんいん セーフ！', { pauseAfterMs: 850 });
+    await stage.typeText('濃い 霧に はばまれ、港へ ひきかえすことにした。\n今回は ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：クラーケンに遭遇＋ちずが逆さまだった！
   if (route === 'reverse') {
     audio.stopBgm();
     audio.playSe('encounter');
@@ -70,33 +65,32 @@ export async function runVoyageScenario(ctx) {
     stage.shake('light');
     stage.setVisualHtml(renderVoyageScene({
       enemy: 'kraken',
-      badge: 'だいおういか が あらわれた！',
+      badge: 'クラーケンが あらわれた！',
       aura: 'aura-red',
-      caption: '海エンカウント ばっかりだ！',
+      caption: 'おおきな 触手が 船に せまる！',
     }));
-    await stage.typeText('また エンカウント！ 今度は クラーケンが あらわれた！\n「トヘロス かけるの わすれてた〜！」', { pauseAfterMs: 750 });
+    await stage.typeText('巨大な クラーケンが 航路を ふさいだ！', { pauseAfterMs: 550 });
 
     audio.startBgm('battle');
     audio.playSe('critical');
     stage.flash('gold');
     stage.setVisualHtml(renderVoyageScene({
       enemy: 'chest_open_gold',
-      badge: 'ちずを さかさまに もっていた！',
+      badge: '海図を さかさまに もっていた！',
       aura: 'aura-gold',
       caption: winner.name,
     }));
-    await stage.typeText(`なんとか 撃退して ちずを よく見たら さかさま だった！\n正しい 島に ついたら「${winner.name}」の 旗が たっていた！`, { pauseAfterMs: 850 });
+    await stage.typeText(`クラーケンを 退けて 海図を みなおしたら さかさま だった！\n正しい 島に あった 旗には「${winner.name}」の 名が しるされていた！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常：宝の島に到着
   audio.playSe('chest');
   stage.flash('gold');
   stage.setVisualHtml(renderVoyageScene({
     enemy: 'chest_gold',
-    badge: '島に ついた！',
+    badge: '島に とうちゃく！',
     aura: 'aura-gold',
     caption: winner.name,
   }));
-  await stage.typeText(`やっと 島に ついた！\nたてふだに「今回の ${drawTitle}：${winner.name}」と かいてあった！`, { pauseAfterMs: 800 });
+  await stage.typeText(`宝の島に とうちゃく！\nたてふだには「今回の ${drawTitle}：${winner.name}」と かいてあった！`, { pauseAfterMs: 600 });
 }

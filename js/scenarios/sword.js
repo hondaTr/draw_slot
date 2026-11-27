@@ -22,78 +22,74 @@ export async function runSwordScenario(ctx) {
   stage.setQuestLabel('まよいのもり・台座のまえ');
   audio.startBgm('field');
 
-  stage.setVisualHtml(renderSwordScene({ drawn: false, challenger: 'だれが ぬけるかな？', badge: '台座に ささった 剣' }));
-  await stage.typeText(`もりのおくに 古い剣が ささっている…\n引きぬいた人が 今回の「${drawTitle}」だ！`, { pauseAfterMs: 700 });
+  stage.setVisualHtml(renderSwordScene({ drawn: false, challenger: 'だれが 引きぬくか…', badge: '台座に ささった 剣' }));
+  await stage.typeText(`もりのおくの 台座に 古い剣が ささっている。\n引きぬいた者が 今回の「${drawTitle}」だ！`, { pauseAfterMs: 520 });
 
-  // プレミア：実はぬくまでもなく ただ置いてあっただけ
   if (route === 'premier') {
-    audio.playSe('confirm');
+    audio.playSe('revive');
     stage.flash('gold');
     stage.setVisualHtml(renderSwordScene({
       drawn: true,
       challenger: winner.name,
-      badge: 'あれ、すぽっと ぬけた！',
+      badge: '剣が 共鳴した！',
       aura: 'aura-gold',
     }));
-    await stage.typeText(`「${winner.name}」が さわったら すぽっと ぬけた！\n（ささっていた のではなく ただ置いてあっただけ みたいだ）`, { pauseAfterMs: 850 });
+    await stage.typeText(`「${winner.name}」が 手をかざしただけで 剣が まっすぐ 引きぬかれた！`, { pauseAfterMs: 650 });
     return;
   }
 
   const firstChallenger = members.length > 1 ? decoy.name : 'たびのしょうにん';
   stage.setVisualHtml(renderSwordScene({
     drawn: false,
-    challenger: `${firstChallenger} が そうびしようとした…`,
+    challenger: `${firstChallenger} が 挑戦！`,
     badge: 'しかし そうび できない！',
     aura: 'aura-red',
   }));
   audio.playSe('miss');
-  await stage.typeText(`まず「${firstChallenger}」が 抜こうとした！\n……しかし「${firstChallenger} は これを そうび できない！」（お約束！）`, { pauseAfterMs: 750 });
+  await stage.typeText(`まず「${firstChallenger}」が 剣に 手をかけた！\n……しかし「${firstChallenger} は これを そうび できない！」`, { pauseAfterMs: 550 });
 
-  // セーフ：よく見たら ただの「ひのきのぼう」だった
   if (isSafe) {
     audio.playSe('miss');
     stage.setVisualHtml(renderSwordScene({
       drawn: false,
-      challenger: 'よくみたら ただの「きのぼう」だった',
-      badge: 'なんだ これ…',
+      challenger: 'びくとも しない…',
+      badge: 'まだ ときが きていないようだ',
       aura: 'aura-wood',
     }));
-    await stage.typeText('みんなで よく 見てみたら、ささっていたのは ただの「ひのきのぼう」だった！\nきょうは 解散！ ぜんいん セーフ！', { pauseAfterMs: 850 });
+    await stage.typeText('だれが 引いても 剣は うごかなかった。\n今回は 見送り＝ぜんいん セーフ！', { pauseAfterMs: 650 });
     return;
   }
 
-  // 逆転：のろわれていた！ → じつは ぬけた人のところに しかけた呪いだった
   if (route === 'reverse') {
     stage.setVisualHtml(renderSwordScene({
       drawn: true,
-      challenger: `${firstChallenger} が ぬいた！`,
-      badge: '……あれ？ おかしいぞ？',
+      challenger: `${firstChallenger} が 抜いた！`,
+      badge: 'しかし のろわれていた！',
       aura: 'aura-red',
     }));
     audio.playSe('wipeout');
-    await stage.typeText(`おや？「${firstChallenger}」が もういちど 引いたら ぬけた！\n……しかし「のろわれていた！ てから はなれない！」`, { pauseAfterMs: 800 });
+    await stage.typeText(`おや？「${firstChallenger}」が 引いたら ぬけた！\n……しかし「のろわれていた！ てから はなれない！」`, { pauseAfterMs: 600 });
 
-    await stage.showCutin('シャナク！ のろいを といた！', 950);
+    await stage.showCutin('きよめの 光が のろいを はらった！', 850);
     audio.playSe('revive');
     stage.flash('gold');
     stage.setVisualHtml(renderSwordScene({
       drawn: true,
       challenger: winner.name,
-      badge: 'ほんものが でてきた！',
+      badge: '真の 使い手！',
       aura: 'aura-gold',
     }));
-    await stage.typeText(`のろいが とけた 剣を となりの「${winner.name}」に わたしてみたら ピッタリ！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 850 });
+    await stage.typeText(`のろいが とけた 剣を となりの「${winner.name}」に わたすと ぴたりと おさまった！\n「${winner.name}」が 今回の「${drawTitle}」に きまった！`, { pauseAfterMs: 650 });
     return;
   }
 
-  // 通常：めでたく抜ける
   audio.playSe('revive');
   stage.flash('gold');
   stage.setVisualHtml(renderSwordScene({
     drawn: true,
     challenger: winner.name,
-    badge: 'みごと 引きぬいた！',
+    badge: '引きぬき せいこう！',
     aura: 'aura-gold',
   }));
-  await stage.typeText(`「${winner.name}」が スッと 剣を 引きぬいた！\n今回の「${drawTitle}」は「${winner.name}」に きまった！`, { pauseAfterMs: 800 });
+  await stage.typeText(`「${winner.name}」が みごと 剣を 引きぬいた！\n今回の「${drawTitle}」は「${winner.name}」に きまった！`, { pauseAfterMs: 600 });
 }

@@ -3,13 +3,20 @@
 export const STORAGE_KEY = 'rpg_roulette_v1';
 
 export const WEIGHT_OPTIONS = [
+  { value: 0, label: '0x (当たらない)' },
   { value: 0.25, label: '0.25x (ごく低)' },
   { value: 0.5, label: '0.5x (低め)' },
   { value: 1, label: '1x (ふつう)' },
   { value: 1.5, label: '1.5x (やや高)' },
   { value: 2, label: '2x (高め)' },
-  { value: 3, label: '3x (激高)' },
+  { value: 3, label: '3x (高)' },
+  { value: 5, label: '5x (かなり高)' },
+  { value: 7, label: '7x (とても高)' },
+  { value: 10, label: '10x (最高)' },
+  { value: 100, label: '100x (ほぼ確実)' },
 ];
+
+export const SPEED_OPTIONS = [0.5, 0.8, 1, 2];
 
 export const SCENARIO_IDS = [
   'treasure',
@@ -24,6 +31,11 @@ export const SCENARIO_IDS = [
   'voyage',
   'pot',
   'yesno',
+  'ring',
+  'phoenix',
+  'slash',
+  'dungeon',
+  'arena',
 ];
 
 function createId(prefix = 'id') {
@@ -53,7 +65,7 @@ export function createDefaultState() {
       selectedScenario: 'random',
       safeRate: 10,
       soundMode: 'all',
-      fastMode: false,
+      speedMultiplier: 1,
       reducedEffects: false,
     },
   };
@@ -64,7 +76,7 @@ function sanitizeMember(raw) {
   const name = String(raw.name ?? '').trim().slice(0, 24);
   if (!name) return null;
   const weightNum = Number(raw.weight);
-  const weight = Number.isFinite(weightNum) && weightNum > 0 ? weightNum : 1;
+  const weight = Number.isFinite(weightNum) && weightNum >= 0 ? weightNum : 1;
   return {
     id: typeof raw.id === 'string' && raw.id ? raw.id : createId('m'),
     name,
@@ -117,6 +129,12 @@ function sanitizeState(raw) {
     : 'random';
 
   const drawTitle = String(s.drawTitle ?? '幹事').trim().slice(0, 20) || '幹事';
+  const rawSpeed = Number(s.speedMultiplier);
+  const speedMultiplier = SPEED_OPTIONS.includes(rawSpeed)
+    ? rawSpeed
+    : s.fastMode
+    ? 2
+    : 1;
 
   return {
     version: 1,
@@ -127,7 +145,7 @@ function sanitizeState(raw) {
       selectedScenario,
       safeRate,
       soundMode,
-      fastMode: Boolean(s.fastMode),
+      speedMultiplier,
       reducedEffects: Boolean(s.reducedEffects),
     },
   };
@@ -273,20 +291,24 @@ export function resetAllWeights(state) {
   };
 }
 
-// 重み付きランダム抽選
+function getMemberWeight(member) {
+  const w = Number(member?.weight);
+  return Number.isFinite(w) && w >= 0 ? w : 1;
+}
+
+// 重み付きランダム抽選（weight === 0 のメンバーは絶対に対象外）
 export function pickWinner(members, rng = Math.random) {
   if (!Array.isArray(members) || members.length === 0) return null;
-  const totalWeight = members.reduce((sum, m) => sum + (Number(m.weight) > 0 ? Number(m.weight) : 1), 0);
-  if (totalWeight <= 0) {
-    return members[Math.floor(rng() * members.length)];
-  }
+  const candidates = members.filter((m) => getMemberWeight(m) > 0);
+  if (candidates.length === 0) return null;
+
+  const totalWeight = candidates.reduce((sum, m) => sum + getMemberWeight(m), 0);
   let roll = rng() * totalWeight;
-  for (const m of members) {
-    const w = Number(m.weight) > 0 ? Number(m.weight) : 1;
-    roll -= w;
+  for (const m of candidates) {
+    roll -= getMemberWeight(m);
     if (roll <= 0) return m;
   }
-  return members[members.length - 1];
+  return candidates[candidates.length - 1];
 }
 
 // 演出用のフェイク候補者（winner 以外から選出、1人だけの場合はダミーを返す）

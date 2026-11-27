@@ -426,6 +426,71 @@ const VILLAGER_PALETTE = {
   D: '#78350f',
 };
 
+// 指輪（DQ5選択イベントモチーフ）
+const RING_GRID = [
+  '.....CC.....',
+  '....CDDC....',
+  '....CCCC....',
+  '...YYYYYY...',
+  '..YY....YY..',
+  '.YY......YY.',
+  '.YY......YY.',
+  '.YY......YY.',
+  '..YY....YY..',
+  '...YYYYYY...',
+  '............',
+  '............',
+];
+
+const RING_PALETTE = {
+  C: '#67c6d8',
+  D: '#e8eef7',
+  Y: '#eab949',
+};
+
+// 不死鳥（ラーミアモチーフ）
+const PHOENIX_GRID = [
+  '.....YY.....',
+  '..O..YY..O..',
+  '.OOYYYYYYOO.',
+  'OOOYYYYYYOOO',
+  'OO.OYYYYO.OO',
+  'O...YYYY...O',
+  '....RRRR....',
+  '...RRRRRR...',
+  '..RR.YY.RR..',
+  '.R...YY...R.',
+  '.....YY.....',
+  '............',
+];
+
+const PHOENIX_PALETTE = {
+  Y: '#eab949',
+  O: '#f59e0b',
+  R: '#df6470',
+};
+
+// オーブ
+const ORB_GRID = [
+  '....WWWW....',
+  '..WWCCCCWW..',
+  '.WCCCCCCCCW.',
+  '.WCCWWWWCCW.',
+  'WCCWWCCWWCCW',
+  'WCCCCCCCCCCW',
+  'WCCCCCCCCCCW',
+  '.WCCCCCCCCW.',
+  '.WCCCCCCCCW.',
+  '..WWCCCCWW..',
+  '....WWWW....',
+  '............',
+];
+
+const ORB_PALETTE = {
+  W: '#e8eef7',
+  C: '#eab949',
+};
+
 export function getSpriteSvg(name, sizePx = 96) {
   switch (name) {
     case 'hero':
@@ -478,6 +543,12 @@ export function getSpriteSvg(name, sizePx = 96) {
       return gridToSvg(POT_GRID, POT_PALETTE, sizePx);
     case 'villager':
       return gridToSvg(VILLAGER_GRID, VILLAGER_PALETTE, sizePx);
+    case 'ring':
+      return gridToSvg(RING_GRID, RING_PALETTE, sizePx);
+    case 'phoenix':
+      return gridToSvg(PHOENIX_GRID, PHOENIX_PALETTE, sizePx);
+    case 'orb':
+      return gridToSvg(ORB_GRID, ORB_PALETTE, sizePx);
     default:
       return gridToSvg(HERO_GRID, HERO_PALETTE, sizePx);
   }
